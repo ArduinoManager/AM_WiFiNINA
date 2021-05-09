@@ -103,7 +103,7 @@ void (*_doWork)(void);
 /*
 Pointer to the function where Switches, Knobs and Leds are syncronized
 */
-void (*_doSync)(char *variable);
+void (*_doSync)(void);
 
 /*
 Pointer to the function where incoming messages are processed
@@ -164,7 +164,7 @@ public:
 
 	AMController(WiFiServer *server, 
 		void (*doWork)(void), 
-		void (*doSync)(char *variable), 
+		void (*doSync)(void), 
 		void (*processIncomingMessages)(char *variable, char *value),
 		void (*processOutgoingMessages)(void),
 #if defined(ALARMS_SUPPORT) 								  
@@ -177,7 +177,7 @@ public:
 
 	AMController(WiFiServer *server, 
 		void (*doWork)(void), 
-		void (*doSync)(char *variable), 
+		void (*doSync)(void), 
 		void (*processIncomingMessages)(char *variable, char *value),
 		void (*processOutgoingMessages)(void),
 		void (*deviceConnected)(void),

@@ -33,15 +33,11 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout);
 #if defined(ALARMS_SUPPORT)
 
 bool check(uint8_t *pRecord, void *pData) {
-
-  Alarm a;
-  
-  memcpy(&a, pRecord, sizeof(a));
-
-  if (strcmp(a.id,(char *)pData)==0)
-    return true;
-
-  return false;
+	Alarm a;
+	memcpy(&a, pRecord, sizeof(a));
+	if (strcmp(a.id,(char *)pData)==0)
+		return true;
+	return false;
 }
 
 #endif 
@@ -49,216 +45,214 @@ bool check(uint8_t *pRecord, void *pData) {
 #if defined(ALARMS_SUPPORT)
 
 AMController::AMController(WiFiServer *server, 
-  void (*doWork)(void), 
-  void (*doSync)(char *variable), 
-  void (*processIncomingMessages)(char *variable, char *value),
-  void (*processOutgoingMessages)(void),
+	void (*doWork)(void), 
+	void (*doSync)(void), 
+	void (*processIncomingMessages)(char *variable, char *value),
+	void (*processOutgoingMessages)(void),
 #if defined(ALARMS_SUPPORT) 								  
-  void (*processAlarms)(char *alarm),
+	void (*processAlarms)(char *alarm),
 #endif								  
-  void (*deviceConnected)(void),
-  void (*deviceDisconnected)(void)
-  ) : AMController(server,doWork,doSync,processIncomingMessages,processOutgoingMessages,deviceConnected,deviceDisconnected)
-{
+	void (*deviceConnected)(void),
+	void (*deviceDisconnected)(void)
+	) : AMController(server,doWork,doSync,processIncomingMessages,processOutgoingMessages,deviceConnected,deviceDisconnected) {
 #ifdef ALARMS_SUPPORT
-  _alarmFile = "ALARMS.TXT";    
-    //_timeServerAddress = IPAddress(64,90,182,55);  // New York City, NY NTP Server nist1-ny.ustiming.org
-    _timeServerAddress = IPAddress(129,6,15,28);   // time.nist.gov
+	_alarmFile = "ALARMS.TXT";    
+	//_timeServerAddress = IPAddress(64,90,182,55);  // New York City, NY NTP Server nist1-ny.ustiming.org
+	_timeServerAddress = IPAddress(129,6,15,28);   // time.nist.gov
 
-    _processAlarms = processAlarms;        
-    _startTime = 0;
-    _sendNtpRequest=false;
-    _lastAlarmCheck = 0;    
-    inizializeAlarms();
+	_processAlarms = processAlarms;        
+	_startTime = 0;
+	_sendNtpRequest=false;
+	_lastAlarmCheck = 0;    
+	inizializeAlarms();
 #endif
-  }
+}
 #endif
 
-  AMController::AMController(WiFiServer *server, 
-   void (*doWork)(void), 
-   void (*doSync)(char *variable),
-   void (*processIncomingMessages)(char *variable, char *value),
-   void (*processOutgoingMessages)(void),
-   void (*deviceConnected)(void),
-   void (*deviceDisconnected)(void)
-   )
-  {
-   _var = true;
-   _idx = 0;
-   _server = server;
-   _doWork = doWork;
-   _doSync = doSync;
-   _processIncomingMessages = processIncomingMessages;
-   _processOutgoingMessages = processOutgoingMessages;
-   _deviceConnected = deviceConnected;
-   _deviceDisconnected = deviceDisconnected;
-   _initialized = false;
-   _pClient = NULL;
+AMController::AMController(WiFiServer *server, 
+	void (*doWork)(void), 
+	void (*doSync)(void),
+	void (*processIncomingMessages)(char *variable, char *value),
+	void (*processOutgoingMessages)(void),
+	void (*deviceConnected)(void),
+	void (*deviceDisconnected)(void)
+	) {
+	_var = true;
+	_idx = 0;
+	_server = server;
+	_doWork = doWork;
+	_doSync = doSync;
+	_processIncomingMessages = processIncomingMessages;
+	_processOutgoingMessages = processOutgoingMessages;
+	_deviceConnected = deviceConnected;
+	_deviceDisconnected = deviceDisconnected;
+	_initialized = false;
+	_pClient = NULL;
 
-   _variable[0] = '\0';
-   _value[0]    = '\0';
+	_variable[0] = '\0';
+	_value[0]    = '\0';
 
 #ifdef ALARMS_SUPPORT
-   _processAlarms = NULL; 
+	_processAlarms = NULL; 
 #endif     
- }                             
+}                             
 
- void AMController::loop() {
-   this->loop(150);
- }
+void AMController::loop() {
+	this->loop(150);
+}
 
- void AMController::loop(unsigned long _delay) {
+void AMController::loop(unsigned long _delay) {
 
-   if (!_initialized) {
-    _initialized = true;
-    _server->begin();
+	if (!_initialized) {
+		_initialized = true;
+		_server->begin();
 		//Serial.println("Initialized");
-    delay(2000);
-  }	  	  	
+		delay(2000);
+	}	  	  	
 #ifdef ALARMS_SUPPORT  	
 
-  if( (millis()/1000<20 && _startTime==0) || _sendNtpRequest) {
-  	
-    this->syncTime();
-    _startTime=100;
-  }
+	if( (millis()/1000<20 && _startTime==0) || _sendNtpRequest) {
 
-  if ( _udp.parsePacket() ) {  
-    this->readTime();
-  }
+		this->syncTime();
+		_startTime=100;
+	}
 
-  if (_processAlarms != NULL) {
+	if ( _udp.parsePacket() ) {  
+		this->readTime();
+	}
 
-    unsigned long now = _startTime + millis()/1000;
+	if (_processAlarms != NULL) {
 
-    if ( (now - _lastAlarmCheck) > ALARM_CHECK_INTERVAL) {
+		unsigned long now = _startTime + millis()/1000;
 
-      _lastAlarmCheck = now;
-      this->checkAndFireAlarms();
-    }
-  }
+		if ( (now - _lastAlarmCheck) > ALARM_CHECK_INTERVAL) {
+
+			_lastAlarmCheck = now;
+			this->checkAndFireAlarms();
+		}
+	}
 
 #endif  	
 
-  _doWork();
+	_doWork();
 
-  WiFiClient localClient = _server->available();
-  _pClient = &localClient;
+	WiFiClient localClient = _server->available();
+	_pClient = &localClient;
 
-  if (localClient) {
+	if (localClient) {
 
-    	// Client connected
+		// Client connected
 
-    if (_deviceConnected != NULL) {
+		if (_deviceConnected != NULL) {
 
-     delay(250);        	        
-     _deviceConnected();
-     delay(250);
-   }
+			delay(250);        	        
+			_deviceConnected();
+			delay(250);
+		}
 
-   while(_pClient->connected()) {
+		while(_pClient->connected()) {
 
-            // Read incoming messages if any
-    this->readVariable();
+			// Read incoming messages if any
+			this->readVariable();
 
-    if (strlen(_value)>0 && strcmp(_variable,"Sync") == 0) {
+			if (strlen(_value)>0 && strcmp(_variable,"Sync") == 0) {
 
-                // Process sync messages for the variable _value
-      _doSync(_value);
-    }
-    else {
+				// Process sync messages for the variable _value
+				_doSync();
+			}
+			else {
 
-     char val[14];
-     char user[14];
+				char val[14];
+				char user[14];
 
 #ifdef ALARMS_SUPPORT             	
-            	// Manages Alarm creation and update requests
+				// Manages Alarm creation and update requests
 
-     char id[8];
-     unsigned long time;
+				char id[8];
+				unsigned long time;
 
-     if (strlen(_value)>0 && strcmp(_variable,"$AlarmId$") == 0) {
-      strcpy(id,_value);
+				if (strlen(_value)>0 && strcmp(_variable,"$AlarmId$") == 0) {
+					strcpy(id,_value);
 
-    } else if (strlen(_value)>0 && strcmp(_variable,"$AlarmT$") == 0) {
-      time=atol(_value);
-    }
-    else if (strlen(_value)>0 && strcmp(_variable,"$AlarmR$") == 0) {
+				} else if (strlen(_value)>0 && strcmp(_variable,"$AlarmT$") == 0) {
+					time=atol(_value);
+				}
+				else if (strlen(_value)>0 && strcmp(_variable,"$AlarmR$") == 0) {
 
-     if (time == 0) {
+					if (time == 0) {
 #ifdef DEBUG					
-      Serial.print("Deleting Alarm "); Serial.println(id);
+						Serial.print("Deleting Alarm "); Serial.println(id);
 #endif						
-      this->removeAlarm(id);			
-    }
-    else
-     this->createUpdateAlarm(id,time,atoi(_value));                			
- }
- else 
+						this->removeAlarm(id);			
+					}
+					else
+						this->createUpdateAlarm(id,time,atoi(_value));                			
+				}
+				else 
 #endif  
 
 #ifdef SD_SUPPORT
-  if (strlen(_variable)>0 && strcmp(_variable,"SD") == 0) {				
+					if (strlen(_variable)>0 && strcmp(_variable,"SD") == 0) {				
 #ifdef DEBUG				
-    Serial.println("List of Files");
+						Serial.println("List of Files");
 #endif   					
-    File root = SD.open("/");
+						File root = SD.open("/");
 
-    if (!root) {
+						if (!root) {
 #ifdef DEBUG				
-      Serial.println("Failed to open /");
+							Serial.println("Failed to open /");
 #endif   				
-      return;							
-    }
+							return;							
+						}
 
-    root.rewindDirectory();   
+						root.rewindDirectory();   
 
-    File entry =  root.openNextFile();
+						File entry =  root.openNextFile();
 
-    if (!entry) {
+						if (!entry) {
 #ifdef DEBUG				
-      Serial.println("Failed to open file");
+							Serial.println("Failed to open file");
 #endif   				
-      return;							
-    }
+							return;							
+						}
 
-    while(entry) {
+						while(entry) {
 
 						//Serial.println(entry.name());
-      if(!entry.isDirectory()) {
+							if(!entry.isDirectory()) {
 
-       this->writeTxtMessage("SD",entry.name());
+								this->writeTxtMessage("SD",entry.name());
 #ifdef DEBUG
-       Serial.println(entry.name());
+								Serial.println(entry.name());
 #endif
-     }	
-     entry.close();
+							}	
+							entry.close();
 
-     entry =	 root.openNextFile();
-   }
+							entry =	 root.openNextFile();
+						}
 
-   root.close();
+						root.close();
 
-   uint8_t buffer[10];
-   strcpy((char *)&buffer[0],"SD=$EFL$#");
-   _pClient->write(buffer,9*sizeof(uint8_t));	
+						uint8_t buffer[10];
+						strcpy((char *)&buffer[0],"SD=$EFL$#");
+						_pClient->write(buffer,9*sizeof(uint8_t));	
 #ifdef DEBUG   							
-   Serial.println("File list sent");				
+						Serial.println("File list sent");				
 #endif					
- } else if (strlen(_variable)>0 && strcmp(_variable,"$SDDL$")==0) {
+					} else if (strlen(_variable)>0 && strcmp(_variable,"$SDDL$")==0) {
 
 #ifdef DEBUG    
-   Serial.print("File: "); Serial.println(_value);
+						Serial.print("File: "); Serial.println(_value);
 #endif
-   File dataFile = SD.open(_value,FILE_READ);
+						File dataFile = SD.open(_value,FILE_READ);
 
-   if (dataFile) {
+						if (dataFile) {
 
-    unsigned long n=0;
-    uint8_t buffer[64];	
+							unsigned long n=0;
+							uint8_t buffer[64];	
 
-    strcpy((char *)&buffer[0],"SD=$C$#");
-    _pClient->write(buffer,7*sizeof(uint8_t));
+							strcpy((char *)&buffer[0],"SD=$C$#");
+							_pClient->write(buffer,7*sizeof(uint8_t));
 
 						delay(3000); // OK
 						
@@ -284,78 +278,78 @@ AMController::AMController(WiFiServer *server,
 #endif
 
 #ifdef SDLOGGEDATAGRAPH_SUPPORT
-        if (strlen(_variable)>0 && strcmp(_variable,"$SDLogData$") == 0) {
+				if (strlen(_variable)>0 && strcmp(_variable,"$SDLogData$") == 0) {
 
 #ifdef DEBUG    
-         Serial.print("Logged data request for: "); Serial.println(_value);
+					Serial.print("Logged data request for: "); Serial.println(_value);
 #endif    
-         sdSendLogData(_value);    			
-       }
+					sdSendLogData(_value);    			
+				}
 #endif
-       if (strlen(_variable)>0 && strlen(_value)>0) {
+				if (strlen(_variable)>0 && strlen(_value)>0) {
 
-    	            // Process incoming messages
-         _processIncomingMessages(_variable,_value);
-       } 
-     }
+					// Process incoming messages
+					_processIncomingMessages(_variable,_value);
+				} 
+			}
 
 #ifdef ALARMS_SUPPORT             
-            // Check and Fire Alarms
-     if (_processAlarms != NULL) {
+			// Check and Fire Alarms
+			if (_processAlarms != NULL) {
 
-      unsigned long now = _startTime + millis()/1000;
+				unsigned long now = _startTime + millis()/1000;
 
-      if ( (now - _lastAlarmCheck) > ALARM_CHECK_INTERVAL) {
+				if ( (now - _lastAlarmCheck) > ALARM_CHECK_INTERVAL) {
 
-        _lastAlarmCheck = now;
-        this->checkAndFireAlarms();
-      }
-    }
+					_lastAlarmCheck = now;
+					this->checkAndFireAlarms();
+				}
+			}
 #endif
 
 #ifdef TWITTER_SUPPORT
 
-    if (_checkTwitter != NULL) {
+			if (_checkTwitter != NULL) {
 
-      unsigned long now = _startTime + millis()/1000;
+				unsigned long now = _startTime + millis()/1000;
 
-      if ( (now - _lastTwitterCheck) > TWITTER_CHECK_INTERVAL) {
+				if ( (now - _lastTwitterCheck) > TWITTER_CHECK_INTERVAL) {
 
-        _lastTwitterCheck = now;
-        checkTwitter();
-      }
-    }
+					_lastTwitterCheck = now;
+					checkTwitter();
+				}
+			}
 #endif 
-            // Write outgoing messages
-    _processOutgoingMessages();
+			// Write outgoing messages
+			_processOutgoingMessages();
 
 #ifdef ALARMS_SUPPORT             
-            // Sync local time with NTP Server
-    if(_sendNtpRequest) {
+			// Sync local time with NTP Server
+			if(_sendNtpRequest) {
 
-      this->syncTime();
-    }
+				this->syncTime();
+			}
 
-    if ( _udp.parsePacket() ) {  
+			if ( _udp.parsePacket() ) {  
 
-      this->readTime();
-    }
+				this->readTime();
+			}
 #endif
 
-    _doWork();
+			_doWork();
 
-    delay(_delay);
-  }
+			delay(_delay);
+		}
 
-        // Client disconnected
+		// Client disconnected
 
-  localClient.flush();
-  localClient.stop();
-  _pClient = NULL;
+		localClient.flush();
+		localClient.stop();
+		_pClient = NULL;
 
-  if (_deviceDisconnected != NULL)
-   _deviceDisconnected();
-}
+		if (_deviceDisconnected != NULL)
+			_deviceDisconnected();
+	}
 }
 
 void AMController::readVariable(void) {
@@ -367,82 +361,82 @@ void AMController::readVariable(void) {
 
 	while (_pClient->available()) {
 
-   char c = _pClient->read();
+		char c = _pClient->read();
 
-   if (isprint (c)) {
+		if (isprint (c)) {
 
-     if (c == '=') {
+			if (c == '=') {
 
-       _variable[_idx]='\0'; 
-       _var = false; 
-       _idx = 0;
-     }
-     else {
+				_variable[_idx]='\0'; 
+				_var = false; 
+				_idx = 0;
+			}
+			else {
 
-       if (c == '#') {
+				if (c == '#') {
 
-         _value[_idx]='\0'; 
-         _var = true; 
-         _idx = 0; 
+					_value[_idx]='\0'; 
+					_var = true; 
+					_idx = 0; 
 
-         return;                    
-       }
-       else {
+					return;                    
+				}
+				else {
 
-         if (_var) {
+					if (_var) {
 
-           if(_idx==VARIABLELEN) 
-            _variable[_idx] = '\0';
-          else
-           _variable[_idx++] = c;
-       }
-       else {
+						if(_idx==VARIABLELEN) 
+							_variable[_idx] = '\0';
+						else
+							_variable[_idx++] = c;
+					}
+					else {
 
-         if(_idx==VALUELEN)
-           _value[_idx] = '\0';
-         else
-           _value[_idx++] = c;
-       }
-     }
-   }
- }
-}    
+						if(_idx==VALUELEN)
+							_value[_idx] = '\0';
+						else
+							_value[_idx++] = c;
+					}
+				}
+			}
+		}
+	}    
 }
 
 
 void AMController::writeMessage(const char *variable, float value){
-  char buffer[VARIABLELEN+VALUELEN+3];
-  char vbuffer[VALUELEN];
+	char buffer[VARIABLELEN+VALUELEN+3];
+	char vbuffer[VALUELEN];
 
-  if (_pClient == NULL)
-   return;   
+	if (_pClient == NULL)
+		return;   
 
- dtostrf(value, 0, 3, vbuffer);    
- snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s#", variable, vbuffer); 
+	dtostrf(value, 0, 3, vbuffer);    
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s#", variable, vbuffer); 
 
- _pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
+	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
 }
 
 void AMController::writeTripleMessage(const char *variable, float vX, float vY, float vZ) {
-  char buffer[VARIABLELEN+VALUELEN+3];
-  char vbufferAx[VALUELEN];
-  char vbufferAy[VALUELEN];
-  char vbufferAz[VALUELEN];
+	char buffer[VARIABLELEN+VALUELEN+3];
+	char vbufferAx[VALUELEN];
+	char vbufferAy[VALUELEN];
+	char vbufferAz[VALUELEN];
 
-  dtostrf(vX, 0, 2, vbufferAx); 
-  dtostrf(vY, 0, 2, vbufferAy); 
-  dtostrf(vZ, 0, 2, vbufferAz);    
-  snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s:%s:%s#", variable, vbufferAx,vbufferAy,vbufferAz); 
+	dtostrf(vX, 0, 2, vbufferAx); 
+	dtostrf(vY, 0, 2, vbufferAy); 
+	dtostrf(vZ, 0, 2, vbufferAz);    
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s:%s:%s#", variable, vbufferAx,vbufferAy,vbufferAz); 
 
-  _pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));    
+	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));    
 }
 
 void AMController::writeTxtMessage(const char *variable, const char *value) {
-  char buffer[128];    
+	char buffer[128];    
 
-  snprintf(buffer,128, "%s=%s#", variable, value);
+	snprintf(buffer,128, "%s=%s#", variable, value);
 
-  _pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
+	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
 }
 
 void AMController::log(const char *msg) {
@@ -487,40 +481,40 @@ void AMController::temporaryDigitalWrite(uint8_t pin, uint8_t value, unsigned lo
 
 #if defined(ARDUINO_SAMD_MKR1000)
 	PORT->Group[g_APinDescription[pin].ulPort].PINCFG[g_APinDescription[pin].ulPin].reg =(uint8_t)(PORT_PINCFG_INEN) ;
- PORT->Group[g_APinDescription[pin].ulPort].DIRSET.reg = (uint32_t)(1<<g_APinDescription[pin].ulPin) ;
+	PORT->Group[g_APinDescription[pin].ulPort].DIRSET.reg = (uint32_t)(1<<g_APinDescription[pin].ulPin) ;
 
- boolean previousValue = digitalRead(pin);
+	boolean previousValue = digitalRead(pin);
 
- switch ( value )
- {
-   case LOW:
-   PORT->Group[g_APinDescription[pin].ulPort].OUTCLR.reg = (1ul << g_APinDescription[pin].ulPin) ;
-   break ;
+	switch ( value )
+	{
+		case LOW:
+		PORT->Group[g_APinDescription[pin].ulPort].OUTCLR.reg = (1ul << g_APinDescription[pin].ulPin) ;
+		break ;
 
-   default:
-   PORT->Group[g_APinDescription[pin].ulPort].OUTSET.reg = (1ul << g_APinDescription[pin].ulPin) ;
-   break ;
- }
+		default:
+		PORT->Group[g_APinDescription[pin].ulPort].OUTSET.reg = (1ul << g_APinDescription[pin].ulPin) ;
+		break ;
+	}
 
- delay(ms);
+	delay(ms);
 
- switch ( previousValue )
- {
-   case LOW:
-   PORT->Group[g_APinDescription[pin].ulPort].OUTCLR.reg = (1ul << g_APinDescription[pin].ulPin) ;
-   break ;
+	switch ( previousValue )
+	{
+		case LOW:
+		PORT->Group[g_APinDescription[pin].ulPort].OUTCLR.reg = (1ul << g_APinDescription[pin].ulPin) ;
+		break ;
 
-   default:
-   PORT->Group[g_APinDescription[pin].ulPort].OUTSET.reg = (1ul << g_APinDescription[pin].ulPin) ;
-   break ;
- }
+		default:
+		PORT->Group[g_APinDescription[pin].ulPort].OUTSET.reg = (1ul << g_APinDescription[pin].ulPin) ;
+		break ;
+	}
 #else
 
- boolean previousValue = digitalRead(pin);
+	boolean previousValue = digitalRead(pin);
 
- digitalWrite(pin, value);
- delay(ms);
- digitalWrite(pin, previousValue);
+	digitalWrite(pin, value);
+	delay(ms);
+	digitalWrite(pin, previousValue);
 
 #endif
 
@@ -541,59 +535,59 @@ void AMController::syncTime() {
 
 	_sendNtpRequest = false;
 
-  	_udp.begin(2390); // Local Port to listen for UDP packets
+	_udp.begin(2390); // Local Port to listen for UDP packets
 
-  	this->sendNTPpacket(_timeServerAddress, _udp);
+	this->sendNTPpacket(_timeServerAddress, _udp);
 
 #ifdef DEBUG
-  	Serial.print("NNP Request Sent to address ");
-  	Serial.println(_timeServerAddress);
+	Serial.print("NNP Request Sent to address ");
+	Serial.println(_timeServerAddress);
 #endif  	
-  }
+}
 
-  unsigned long AMController::now() {
+unsigned long AMController::now() {
 
-   unsigned long now = _startTime + millis()/1000;
+	unsigned long now = _startTime + millis()/1000;
 
-   return now;
- }
+	return now;
+}
 
- void AMController::readTime() {
+void AMController::readTime() {
 
 	// Packet Received from NTP Server
-    _udp.read(_packetBuffer,NTP_PACKET_SIZE);  // read the packet into the buffer
+	_udp.read(_packetBuffer,NTP_PACKET_SIZE);  // read the packet into the buffer
 
-    //the timestamp starts at byte 40 of the received packet and is four bytes,
-    // or two words, long. First, esxtract the two words:
+	//the timestamp starts at byte 40 of the received packet and is four bytes,
+	// or two words, long. First, esxtract the two words:
 
-    unsigned long highWord = word(_packetBuffer[40], _packetBuffer[41]);
-    unsigned long lowWord = word(_packetBuffer[42], _packetBuffer[43]);  
+	unsigned long highWord = word(_packetBuffer[40], _packetBuffer[41]);
+	unsigned long lowWord = word(_packetBuffer[42], _packetBuffer[43]);  
 
 	// combine the four bytes (two words) into a long integer
-    // this is NTP time (seconds since Jan 1 1900):    	
-    unsigned long secsSince1900 = highWord << 16 | lowWord;  
+	// this is NTP time (seconds since Jan 1 1900):    	
+	unsigned long secsSince1900 = highWord << 16 | lowWord;  
 
 	// now convert NTP time into everyday time:
-    // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
-    const unsigned long seventyYears = 2208988800UL;     
-    // subtract seventy years to get Unix time:
-    _startTime = secsSince1900 - seventyYears;  
+	// Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
+	const unsigned long seventyYears = 2208988800UL;     
+	// subtract seventy years to get Unix time:
+	_startTime = secsSince1900 - seventyYears;  
 
-    // subtract current millis to sync with time in Arduino
-    _startTime -= millis()/1000;
+	// subtract current millis to sync with time in Arduino
+	_startTime -= millis()/1000;
 
 #ifdef DEBUG
-    Serial.println("NNP Respose");
-    this->printTime(_startTime);
-    Serial.println();
+	Serial.println("NNP Respose");
+	this->printTime(_startTime);
+	Serial.println();
 #endif  	    
-  }
+}
 
 // send an NTP request to the time server at the given address 
-  unsigned long AMController::sendNTPpacket(IPAddress& address, WiFiUDP udp) {
+unsigned long AMController::sendNTPpacket(IPAddress& address, WiFiUDP udp) {
 
   // set all bytes in the buffer to 0
-    memset(_packetBuffer, 0, NTP_PACKET_SIZE);
+	memset(_packetBuffer, 0, NTP_PACKET_SIZE);
   // Initialize values needed to form NTP request
   // (see URL above for details on the packets)
   //Serial.println("2");
@@ -625,11 +619,11 @@ void AMController::breakTime(unsigned long time, int *seconds, int *minutes, int
   // this is a more compact version of the C library localtime function
   // note that year is offset from 1970 !!!
 
-  unsigned long year;
-  uint8_t month, monthLength;
-  unsigned long days;
+	unsigned long year;
+	uint8_t month, monthLength;
+	unsigned long days;
 
-  *seconds = time % 60;
+	*seconds = time % 60;
   time /= 60; // now it is minutes
   *minutes = time % 60;
   time /= 60; // now it is hours
@@ -640,7 +634,7 @@ void AMController::breakTime(unsigned long time, int *seconds, int *minutes, int
   year = 0;  
   days = 0;
   while((unsigned)(days += (LEAP_YEAR(year) ? 366 : 365)) <= time) {
-    year++;
+  	year++;
   }
   *Year = year+1970; // year is offset from 1970 
 
@@ -651,52 +645,52 @@ void AMController::breakTime(unsigned long time, int *seconds, int *minutes, int
   month=0;
   monthLength=0;
   for (month=0; month<12; month++) {
-    if (month==1) { // february
-      if (LEAP_YEAR(year)) {
-        monthLength=29;
-      } 
-      else {
-        monthLength=28;
-      }
-    } 
-    else {
-      monthLength = monthDays[month];
-    }
+	if (month==1) { // february
+		if (LEAP_YEAR(year)) {
+			monthLength=29;
+		} 
+		else {
+			monthLength=28;
+		}
+	} 
+	else {
+		monthLength = monthDays[month];
+	}
 
-    if (time >= monthLength) {
-      time -= monthLength;
-    } 
-    else {
-      break;
-    }
-  }
+	if (time >= monthLength) {
+		time -= monthLength;
+	} 
+	else {
+		break;
+	}
+}
   *Month = month + 1;  // jan is month 1  
   *Day = time + 1;     // day of month
 }
 
 void AMController::printTime(unsigned long time) {
 
- int seconds;
- int minutes;
- int hours;
- int Wday;
- long Year;
- int Month;
- int Day;
+	int seconds;
+	int minutes;
+	int hours;
+	int Wday;
+	long Year;
+	int Month;
+	int Day;
 
- this->breakTime(time, &seconds, &minutes, &hours, &Wday, &Year, &Month, &Day);
+	this->breakTime(time, &seconds, &minutes, &hours, &Wday, &Year, &Month, &Day);
 
- Serial.print(Day);
- Serial.print("/");
- Serial.print(Month);
- Serial.print("/");
- Serial.print(Year);
- Serial.print(" ");
- Serial.print(hours);
- Serial.print(":");
- Serial.print(minutes);
- Serial.print(":");
- Serial.print(seconds);
+	Serial.print(Day);
+	Serial.print("/");
+	Serial.print(Month);
+	Serial.print("/");
+	Serial.print(Year);
+	Serial.print(" ");
+	Serial.print(hours);
+	Serial.print(":");
+	Serial.print(minutes);
+	Serial.print(":");
+	Serial.print(seconds);
 }
 
 #endif
@@ -718,25 +712,25 @@ void AMController::createUpdateAlarm(char *id, unsigned long time, bool repeat) 
 	
 	if (pos > -1) {
 
-   a.time = time;
-   a.repeat = repeat;
+		a.time = time;
+		a.repeat = repeat;
 
-   fileManager.update(_alarmFile, pos, (uint8_t *)&a, sizeof(a));
+		fileManager.update(_alarmFile, pos, (uint8_t *)&a, sizeof(a));
 
 #ifdef DEBUG
-   dumpAlarms();
+		dumpAlarms();
 #endif
-   return;
- }
+		return;
+	}
 
- strcpy(a.id,id);
- a.time = time;
- a.repeat = repeat;
+	strcpy(a.id,id);
+	a.time = time;
+	a.repeat = repeat;
 
- fileManager.append(_alarmFile, (uint8_t *)&a, sizeof(a));
+	fileManager.append(_alarmFile, (uint8_t *)&a, sizeof(a));
 
 #ifdef DEBUG
- dumpAlarms();
+	dumpAlarms();
 #endif
 }
 
@@ -771,10 +765,10 @@ void AMController::dumpAlarms() {
 		if (!fileManager.read(_alarmFile, i, (uint8_t *)&a, sizeof(a)))
 			return;		
 		
-   Serial.print("\tId: "); Serial.print(a.id);
-   Serial.print(" time: "); printTime(a.time);
-   Serial.print(" Repeat: "); Serial.println(a.repeat);
- }	
+		Serial.print("\tId: "); Serial.print(a.id);
+		Serial.print(" time: "); printTime(a.time);
+		Serial.print(" Repeat: "); Serial.println(a.repeat);
+	}	
 }
 #endif
 
@@ -858,43 +852,43 @@ void AMController::sdLogLabels(const char *variable, const char *label1, const c
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile) 
- {
-   dataFile.print("-");
-   dataFile.print(";");
-   dataFile.print(label1);
-   dataFile.print(";");
+	if (dataFile) 
+	{
+		dataFile.print("-");
+		dataFile.print(";");
+		dataFile.print(label1);
+		dataFile.print(";");
 
-   if(label2 != NULL)
-    dataFile.print(label2);
-  else
-    dataFile.print("-");
-  dataFile.print(";");
+		if(label2 != NULL)
+			dataFile.print(label2);
+		else
+			dataFile.print("-");
+		dataFile.print(";");
 
-  if(label3 != NULL)
-    dataFile.print(label3);
-  else
-    dataFile.print("-");
-  dataFile.print(";");
+		if(label3 != NULL)
+			dataFile.print(label3);
+		else
+			dataFile.print("-");
+		dataFile.print(";");
 
-  if(label4 != NULL)
-    dataFile.print(label4);
-  else
-    dataFile.print("-");
-  dataFile.print(";");
+		if(label4 != NULL)
+			dataFile.print(label4);
+		else
+			dataFile.print("-");
+		dataFile.print(";");
 
-  if(label5 != NULL)
-    dataFile.println(label5);
-  else
-    dataFile.println("-");
+		if(label5 != NULL)
+			dataFile.println(label5);
+		else
+			dataFile.println("-");
 
-  dataFile.flush();
-  dataFile.close();
-} else {
+		dataFile.flush();
+		dataFile.close();
+	} else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 
@@ -902,189 +896,189 @@ void AMController::sdLog(const char *variable, unsigned long time, float v1) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile) 
- {
-   dataFile.print(time);
-   dataFile.print(";");
-   dataFile.print(v1);
+	if (dataFile) 
+	{
+		dataFile.print(time);
+		dataFile.print(";");
+		dataFile.print(v1);
 
-   dataFile.print(";-;-;-;-");
-   dataFile.println();
+		dataFile.print(";-;-;-;-");
+		dataFile.println();
 
-   dataFile.flush();
-   dataFile.close();
- }
- else {
+		dataFile.flush();
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 void AMController::sdLog(const char *variable, unsigned long time, float v1, float v2) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile && time>0) 
- {
-   dataFile.print(time);
-   dataFile.print(";");
-   dataFile.print(v1);
-   dataFile.print(";");
+	if (dataFile && time>0) 
+	{
+		dataFile.print(time);
+		dataFile.print(";");
+		dataFile.print(v1);
+		dataFile.print(";");
 
-   dataFile.print(v2);
+		dataFile.print(v2);
 
-   dataFile.print(";-;-;-");
-   dataFile.println();
+		dataFile.print(";-;-;-");
+		dataFile.println();
 
-   dataFile.flush();
-   dataFile.close();
- }
- else {
+		dataFile.flush();
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 void AMController::sdLog(const char *variable, unsigned long time, float v1, float v2, float v3) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile && time>0) 
- {
-   dataFile.print(time);
-   dataFile.print(";");
-   dataFile.print(v1);
-   dataFile.print(";");
+	if (dataFile && time>0) 
+	{
+		dataFile.print(time);
+		dataFile.print(";");
+		dataFile.print(v1);
+		dataFile.print(";");
 
-   dataFile.print(v2);
-   dataFile.print(";");
+		dataFile.print(v2);
+		dataFile.print(";");
 
-   dataFile.print(v3);
+		dataFile.print(v3);
 
-   dataFile.print(";-;-");
-   dataFile.println();
+		dataFile.print(";-;-");
+		dataFile.println();
 
-   dataFile.flush();
-   dataFile.close();
- }
- else {
+		dataFile.flush();
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 void AMController::sdLog(const char *variable, unsigned long time, float v1, float v2, float v3, float v4) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile && time>0) 
- {
-   dataFile.print(time);
-   dataFile.print(";");
-   dataFile.print(v1);
-   dataFile.print(";");
+	if (dataFile && time>0) 
+	{
+		dataFile.print(time);
+		dataFile.print(";");
+		dataFile.print(v1);
+		dataFile.print(";");
 
-   dataFile.print(v2);
-   dataFile.print(";");
+		dataFile.print(v2);
+		dataFile.print(";");
 
-   dataFile.print(v3);
-   dataFile.print(";");
+		dataFile.print(v3);
+		dataFile.print(";");
 
-   dataFile.print(v4);
+		dataFile.print(v4);
 
-   dataFile.println(";-");
-   dataFile.println();
+		dataFile.println(";-");
+		dataFile.println();
 
-   dataFile.flush();
-   dataFile.close();
- }
- else {
+		dataFile.flush();
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 void AMController::sdLog(const char *variable, unsigned long time, float v1, float v2, float v3, float v4, float v5) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile && time>0) 
- {
-   dataFile.print(time);
-   dataFile.print(";");
-   dataFile.print(v1);
-   dataFile.print(";");
+	if (dataFile && time>0) 
+	{
+		dataFile.print(time);
+		dataFile.print(";");
+		dataFile.print(v1);
+		dataFile.print(";");
 
-   dataFile.print(v2);
-   dataFile.print(";");
+		dataFile.print(v2);
+		dataFile.print(";");
 
-   dataFile.print(v3);
-   dataFile.print(";");
+		dataFile.print(v3);
+		dataFile.print(";");
 
-   dataFile.print(v4);
-   dataFile.print(";");
+		dataFile.print(v4);
+		dataFile.print(";");
 
-   dataFile.println(v5);
+		dataFile.println(v5);
 
-   dataFile.println();
+		dataFile.println();
 
-   dataFile.flush();
-   dataFile.close();
- }
- else {
+		dataFile.flush();
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-  Serial.print("Error opening"); Serial.println(variable);
+		Serial.print("Error opening"); Serial.println(variable);
 #endif  		
-}				
+	}				
 }
 
 void AMController::sdSendLogData(const char *variable) {
 
- File dataFile = SD.open(variable, FILE_WRITE);
- 
- if (dataFile) {
+	File dataFile = SD.open(variable, FILE_WRITE);
 
-   char c;
-   char buffer[128];
-   int i = 0;
+	if (dataFile) {
 
-   dataFile.seek(0);
+		char c;
+		char buffer[128];
+		int i = 0;
 
-   while( dataFile.available() ) {
+		dataFile.seek(0);
 
-    c = dataFile.read();
+		while( dataFile.available() ) {
 
-    if (c == '\n') {
+			c = dataFile.read();
 
-      buffer[i++] = '\0';
+			if (c == '\n') {
+
+				buffer[i++] = '\0';
 #ifdef DEBUG
-      Serial.println(buffer);
+				Serial.println(buffer);
 #endif  	
-      this->writeTxtMessage(variable,buffer); 
+				this->writeTxtMessage(variable,buffer); 
 
-      i=0;
-    }
-    else 
-      buffer[i++] = c;
-  }
+				i=0;
+			}
+			else 
+				buffer[i++] = c;
+		}
 
 #ifdef DEBUG
-  Serial.println("All data sent");
+		Serial.println("All data sent");
 #endif  	
 
-  dataFile.close();
-}
-else {
+		dataFile.close();
+	}
+	else {
 #ifdef DEBUG
-	Serial.print("Error opening "); Serial.println(variable);
+		Serial.print("Error opening "); Serial.println(variable);
 #endif  	
-}
+	}
 
-this->writeTxtMessage(variable,"");
+	this->writeTxtMessage(variable,"");
 }	
 
 // Size in bytes
@@ -1092,11 +1086,11 @@ uint16_t AMController::sdFileSize(const char *variable) {
 
 	File dataFile = SD.open(variable, FILE_WRITE);
 
- if (dataFile) {
-  return dataFile.size();
-}
+	if (dataFile) {
+		return dataFile.size();
+	}
 
-return -1;
+	return -1;
 }
 
 void AMController::sdPurgeLogData(const char *variable) {
