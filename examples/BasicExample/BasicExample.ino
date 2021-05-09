@@ -84,7 +84,7 @@ int pot;
 
 */
 void doWork();
-void doSync(char *variable);
+void doSync();
 void processIncomingMessages(char *variable, char *value);
 void processOutgoingMessages();
 void processAlarms(char *variable);
