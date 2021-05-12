@@ -44,7 +44,6 @@
 extern "C" {
 #endif
 	char *dtostrf(double val, signed char width, unsigned char prec, char *sout);
-
 #ifdef __cplusplus
 }
 #endif
@@ -87,11 +86,11 @@ private:
 #ifdef ALARMS_SUPPORT
 	String 					_alarmFile;
 	WiFiUDP					_udp;
-IPAddress 					_timeServerAddress;  // NTP Server Address
-bool						_sendNtpRequest;
-byte 						_packetBuffer[48]; 	// buffer to hold incoming and outgoing packets 
-unsigned long   			_lastAlarmCheck;
-unsigned long				_startTime;
+    IPAddress 				_timeServerAddress;  // NTP Server Address
+    bool					_sendNtpRequest;
+    byte 					_packetBuffer[48]; 	// buffer to hold incoming and outgoing packets 
+    unsigned long   		_lastAlarmCheck;
+    unsigned long			_startTime;
 #endif
 
 
