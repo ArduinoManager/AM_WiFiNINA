@@ -73,6 +73,7 @@ setTwitterKeys	KEYWORD2
 #######################################
 # Instances (KEYWORD2)
 #######################################
+AM_WiFiNINA	KEYWORD2
 AMController	KEYWORD2
 amController	KEYWORD2
 
