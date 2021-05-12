@@ -98,7 +98,7 @@ AMController::AMController(WiFiServer *server,
 }                             
 
 void AMController::loop() {
-	this->loop(150);
+	this->loop(20);
 }
 
 void AMController::loop(unsigned long _delay) {
@@ -106,8 +106,7 @@ void AMController::loop(unsigned long _delay) {
 	if (!_initialized) {
 		_initialized = true;
 		_server->begin();
-		//Serial.println("Initialized");
-		delay(2000);
+		delay(1500);
 	}	  	  	
 #ifdef ALARMS_SUPPORT  	
 
@@ -140,6 +139,8 @@ void AMController::loop(unsigned long _delay) {
 	_pClient = &localClient;
 
 	if (localClient) {
+
+		Serial.println("Cliente connected");
 
 		// Client connected
 
