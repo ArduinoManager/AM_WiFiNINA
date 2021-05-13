@@ -404,6 +404,16 @@ void AMController::readVariable(void) {
 	}    
 }
 
+void AMController::writeMessage(const char *variable, int value){
+	char buffer[VARIABLELEN+VALUELEN+3];
+	char vbuffer[VALUELEN];
+
+	if (_pClient == NULL)
+		return;   
+
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%d#", variable, value); 
+	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
+}
 
 void AMController::writeMessage(const char *variable, float value){
 	char buffer[VARIABLELEN+VALUELEN+3];
@@ -412,9 +422,7 @@ void AMController::writeMessage(const char *variable, float value){
 	if (_pClient == NULL)
 		return;   
 
-	dtostrf(value, 0, 3, vbuffer);    
-	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s#", variable, vbuffer); 
-
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%.3f#", variable, vbuffer); 
 	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
 }
 

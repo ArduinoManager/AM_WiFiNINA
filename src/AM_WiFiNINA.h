@@ -184,6 +184,7 @@ public:
 
 	void loop();
 	void loop(unsigned long delay);
+	void writeMessage(const char *variable, int value);
 	void writeMessage(const char *variable, float value);
 	void writeTripleMessage(const char *variable, float vX, float vY, float vZ);
 	void writeTxtMessage(const char *variable, const char *value);
