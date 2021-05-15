@@ -417,12 +417,9 @@ void AMController::writeMessage(const char *variable, int value){
 
 void AMController::writeMessage(const char *variable, float value){
 	char buffer[VARIABLELEN+VALUELEN+3];
-	char vbuffer[VALUELEN];
-
 	if (_pClient == NULL)
 		return;   
-
-	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%.3f#", variable, vbuffer); 
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%.3f#", variable, value); 
 	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
 }
 
