@@ -163,9 +163,6 @@ void AMController::loop(unsigned long _delay) {
 			}
 			else {
 
-				char val[14];
-				char user[14];
-
 #ifdef ALARMS_SUPPORT             	
 				// Manages Alarm creation and update requests
 
@@ -404,17 +401,21 @@ void AMController::readVariable(void) {
 	}    
 }
 
-
-void AMController::writeMessage(const char *variable, float value){
+void AMController::writeMessage(const char *variable, int value){
 	char buffer[VARIABLELEN+VALUELEN+3];
-	char vbuffer[VALUELEN];
 
 	if (_pClient == NULL)
 		return;   
 
-	dtostrf(value, 0, 3, vbuffer);    
-	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%s#", variable, vbuffer); 
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%d#", variable, value); 
+	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
+}
 
+void AMController::writeMessage(const char *variable, float value){
+	char buffer[VARIABLELEN+VALUELEN+3];
+	if (_pClient == NULL)
+		return;   
+	snprintf(buffer,VARIABLELEN+VALUELEN+3, "%s=%.3f#", variable, value); 
 	_pClient->write((const uint8_t *)buffer, strlen(buffer)*sizeof(char));
 }
 
@@ -585,7 +586,7 @@ void AMController::readTime() {
 }
 
 // send an NTP request to the time server at the given address 
-unsigned long AMController::sendNTPpacket(IPAddress& address, WiFiUDP udp) {
+void AMController::sendNTPpacket(IPAddress& address, WiFiUDP udp) {
 
   // set all bytes in the buffer to 0
 	memset(_packetBuffer, 0, NTP_PACKET_SIZE);

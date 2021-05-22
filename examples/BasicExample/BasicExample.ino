@@ -34,6 +34,8 @@
 
 #include <Servo.h>
 #include <AM_WiFiNINA.h>
+#include "arduino_secrets.h"
+
 
 #define SD_SELECT 5
 
@@ -47,8 +49,8 @@ IPAddress dns(8, 8, 8, 8);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
-char ssid[]    = "myssid";      // your network SSID (name)
-char pass[]    = "mypassword";  // your network password
+char ssid[] = SECRET_SSID;  // your network SSID (name) i.g. "MYNETWORK"
+char pass[] = SECRET_PASS;  // your network password i.g. "MYPASSWORD"
 
 int status = WL_IDLE_STATUS;
 
@@ -216,23 +218,11 @@ void doWork() {
   This function is called when the ios device connects and needs to initialize the position of switches and knobs
 
 */
-void doSync (char *variable) {
+void doSync () {
 
-  if (strcmp(variable, "Knob1") == 0) {
-
-    amController.writeMessage(variable, map(servo.read(), 0, 180, 0, 1023));
-  }
-
-  if (strcmp(variable, "S1") == 0) {
-
-    amController.writeMessage(variable, yellowLed);
-  }
-
-  if (strcmp(variable, "Msg") == 0) {
-
-    amController.writeTxtMessage("Msg", "Hello, I'm your Arduino board");
-  }
-
+    amController.writeMessage("Knob1", (float)map(servo.read(), 0, 180, 0, 1023));
+    amController.writeMessage("S1", yellowLed);
+    amController.writeTxtMessage("Msg", "Hello, I'm your Arduino Nano 33 IOT board");
 }
 
 /**

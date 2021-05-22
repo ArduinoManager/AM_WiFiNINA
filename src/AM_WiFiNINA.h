@@ -144,7 +144,7 @@ void readVariable(void);
 
 #ifdef ALARMS_SUPPORT
 
-unsigned long sendNTPpacket(IPAddress& address, WiFiUDP udp);
+void sendNTPpacket(IPAddress& address, WiFiUDP udp);
 void breakTime(unsigned long time, int *seconds, int *minutes, int *hours, int *Wday, long *Year, int *Month, int *Day);
 
 void syncTime();
@@ -184,6 +184,7 @@ public:
 
 	void loop();
 	void loop(unsigned long delay);
+	void writeMessage(const char *variable, int value);
 	void writeMessage(const char *variable, float value);
 	void writeTripleMessage(const char *variable, float vX, float vY, float vZ);
 	void writeTxtMessage(const char *variable, const char *value);

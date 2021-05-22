@@ -34,6 +34,7 @@
 #include <Arduino_LSM6DS3.h>
 #include <MadgwickAHRS.h>
 #include <AM_WiFiNINA.h>
+#include "arduino_secrets.h"
 
 /******************
 
@@ -65,8 +66,8 @@ IPAddress dns(8, 8, 8, 8);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
-char ssid[]    = "myssid";      // your network SSID (name)
-char pass[]    = "mypassword";  // your network password
+char ssid[] = SECRET_SSID;  // your network SSID (name) i.g. "MYNETWORK"
+char pass[] = SECRET_PASS;  // your network password i.g. "MYPASSWORD"
 
 int status = WL_IDLE_STATUS;
 
@@ -164,7 +165,7 @@ void doWork() {
   This function is called when the ios device connects and needs to initialize the position of switches and knobs
 
 */
-void doSync (char *variable) {
+void doSync () {
 }
 
 /**
