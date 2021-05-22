@@ -2,7 +2,8 @@
 
 This is an Arduino library to work with Arduino Manager app available for iOS and macOS.
 
- * Supported Boards: Any board with u-blox NINA-W102 
+ * Supported Boards: Any board with u-blox NINA-W102
+ * Protocol: WiFi
 
 ## Arduino Manager
 
