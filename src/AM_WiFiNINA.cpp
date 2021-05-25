@@ -20,7 +20,7 @@
  *
  */
 
-#include "AM_WiFiNINA.h"
+#include <AM_WiFiNINA.h>
 
 #ifdef DEBUG
 #define LEAP_YEAR(Y)     ( ((1970+Y)>0) && !((1970+Y)%4) && ( ((1970+Y)%100) || !((1970+Y)%400) ) )
@@ -139,13 +139,12 @@ void AMController::loop(unsigned long _delay) {
 	_pClient = &localClient;
 
 	if (localClient) {
-
-		Serial.println("Cliente connected");
-
+#ifdef DEBUG	
+		Serial.println("Client connected");
+#endif
 		// Client connected
 
 		if (_deviceConnected != NULL) {
-
 			delay(250);        	        
 			_deviceConnected();
 			delay(250);
@@ -157,12 +156,10 @@ void AMController::loop(unsigned long _delay) {
 			this->readVariable();
 
 			if (strlen(_value)>0 && strcmp(_variable,"Sync") == 0) {
-
 				// Process sync messages for the variable _value
 				_doSync();
 			}
 			else {
-
 #ifdef ALARMS_SUPPORT             	
 				// Manages Alarm creation and update requests
 
@@ -184,49 +181,41 @@ void AMController::loop(unsigned long _delay) {
 						this->removeAlarm(id);			
 					}
 					else
-						this->createUpdateAlarm(id,time,atoi(_value));                			
+						this->createUpdateAlarm(id,time,atoi(_value));    
+#endif 						            			
 				}
-				else 
-#endif  
-
 #ifdef SD_SUPPORT
-					if (strlen(_variable)>0 && strcmp(_variable,"SD") == 0) {				
-#ifdef DEBUG				
+				else if (strlen(_variable)>0 && strcmp(_variable,"SD") == 0) {	
+#ifdef DEBUG					
 						Serial.println("List of Files");
-#endif   					
+#endif						
 						File root = SD.open("/");
-
 						if (!root) {
-#ifdef DEBUG				
+#ifdef DEBUG						
 							Serial.println("Failed to open /");
-#endif   				
+#endif							
 							return;							
 						}
 
 						root.rewindDirectory();   
-
 						File entry =  root.openNextFile();
 
 						if (!entry) {
-#ifdef DEBUG				
-							Serial.println("Failed to open file");
-#endif   				
+#ifdef DEBUG						
+							Serial.println("Failed to get first file");
+#endif							
 							return;							
 						}
 
 						while(entry) {
-
-						//Serial.println(entry.name());
 							if(!entry.isDirectory()) {
-
 								this->writeTxtMessage("SD",entry.name());
-#ifdef DEBUG
+#ifdef DEBUG								
 								Serial.println(entry.name());
-#endif
+#endif								
 							}	
 							entry.close();
-
-							entry =	 root.openNextFile();
+							entry =	root.openNextFile();
 						}
 
 						root.close();
@@ -234,43 +223,35 @@ void AMController::loop(unsigned long _delay) {
 						uint8_t buffer[10];
 						strcpy((char *)&buffer[0],"SD=$EFL$#");
 						_pClient->write(buffer,9*sizeof(uint8_t));	
-#ifdef DEBUG   							
+#ifdef DEBUG						
 						Serial.println("File list sent");				
-#endif					
-					} else if (strlen(_variable)>0 && strcmp(_variable,"$SDDL$")==0) {
-
-#ifdef DEBUG    
+#endif						
+					} 
+					else if (strlen(_variable)>0 && strcmp(_variable,"$SDDL$")==0) {
+#ifdef DEBUG					
 						Serial.print("File: "); Serial.println(_value);
-#endif
+#endif						
 						File dataFile = SD.open(_value,FILE_READ);
-
 						if (dataFile) {
-
 							unsigned long n=0;
 							uint8_t buffer[64];	
-
 							strcpy((char *)&buffer[0],"SD=$C$#");
 							_pClient->write(buffer,7*sizeof(uint8_t));
 
-						delay(3000); // OK
+							delay(3000); // OK
 						
-						while(dataFile.available()) {
-
-							n = dataFile.read(buffer, sizeof(buffer));			
-							_pClient->write(buffer, n*sizeof(uint8_t));							
-						}
-
-						strcpy((char *)&buffer[0],"SD=$E$#");
-						_pClient->write(buffer,7*sizeof(uint8_t));
-
-						delay(150);
-
-						dataFile.close();	
-#ifdef DEBUG								
-						Serial.print("Fine Sent");
-#endif								
+							while(dataFile.available()) {
+								n = dataFile.read(buffer, sizeof(buffer));			
+								_pClient->write(buffer, n*sizeof(uint8_t));							
+							}
+							strcpy((char *)&buffer[0],"SD=$E$#");
+							_pClient->write(buffer,7*sizeof(uint8_t));
+							delay(150);
+							dataFile.close();	
+#ifdef DEBUG							
+							Serial.print("Fine Sent");
+#endif							
 					}
-
 					_pClient->flush();
 				}					
 #endif

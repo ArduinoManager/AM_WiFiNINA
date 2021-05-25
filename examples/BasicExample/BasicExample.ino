@@ -127,7 +127,6 @@ void setup() {
   // attempt to connect to Wifi network
 
   WiFi.config(ip, dns, gateway, subnet);
-
   while (status != WL_CONNECTED) {
 
     Serial.print("Attempting to connect to SSID: ");
