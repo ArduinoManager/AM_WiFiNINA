@@ -29,6 +29,22 @@
 #define SDLOGGEDATAGRAPH_SUPPORT  // uncomment to enable support for Logged Data Widget
 //#define DEBUG           			    // uncomment to enable debugging - You should not need it !
 
+/*******************************
+
+Apparently the SD Card doesn't work if the sketch's setup contains
+
+pinMode(LED_BUILTIN,OUTPUT);
+
+Even if LED_BUILTIN is not configured as OUTPUT
+
+digitalWrite(LED_BUILTIN, ...);
+
+works as expected.
+
+********************************/
+
+
+
 #if !defined(ARDUINO_SAMD_NANO_33_IOT) && !defined(ARDUINO_SAMD_MKRWIFI1010)
 #error THIS LIBRARY IS FOR NANO 33 IOT AND MKR WiFi 1010 ONLY!!!!
 #error FOR OTHER BOARDS NANO 33 IOT LIKE, PLEASE TRY TO CHANGE THIS CHECK OR CONTACT THE AUTHOR
